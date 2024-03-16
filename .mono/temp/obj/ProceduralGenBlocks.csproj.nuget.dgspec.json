@@ -1,0 +1,61 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\NoSpacesForWSL\\OneDrive\\Documents\\GODOTProjs\\ProceduralGenBlocks\\ProceduralGenBlocks.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\NoSpacesForWSL\\OneDrive\\Documents\\GODOTProjs\\ProceduralGenBlocks\\ProceduralGenBlocks.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\NoSpacesForWSL\\OneDrive\\Documents\\GODOTProjs\\ProceduralGenBlocks\\ProceduralGenBlocks.csproj",
+        "projectName": "ProceduralGenBlocks",
+        "projectPath": "C:\\Users\\NoSpacesForWSL\\OneDrive\\Documents\\GODOTProjs\\ProceduralGenBlocks\\ProceduralGenBlocks.csproj",
+        "packagesPath": "C:\\Users\\NoSpacesForWSL\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\NoSpacesForWSL\\OneDrive\\Documents\\GODOTProjs\\ProceduralGenBlocks\\.mono\\temp\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\NoSpacesForWSL\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "targetAlias": "net472",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "targetAlias": "net472",
+          "dependencies": {
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.3, )"
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[7.0.3, )"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.400\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
