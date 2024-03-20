@@ -46,14 +46,15 @@ public class GeneralNoise
 			// {
 			// 	SetWaveNoise2D();
 			// }
-			noise2D = Noise.Calc2D((int)noiseInfo.dimensions.x, (int)noiseInfo.dimensions.y, noiseInfo.scale);
+			noise2D = Noise.Calc2D((int)noiseInfo.dimensions.x, (int)noiseInfo.dimensions.z, noiseInfo.scale);
 		}
 		else if (noiseInfo.dimension == Dimension.D3)
 		{
-			noise3D = Noise.Calc3D((int)noiseInfo.dimensions.x, (int)noiseInfo.dimensions.y, (int)noiseInfo.dimensions.z, noiseInfo.scale);
+			noise3D = Noise.Calc3D((int)noiseInfo.dimensions.x, (int)noiseInfo.dimensions.z, (int)noiseInfo.dimensions.y, noiseInfo.scale);
 		}
 
 		FlattenData();
+		
 		//reverses two's complement interpretation
 		for (int i = 0; i < noise1D.Length; i++)
 		{
@@ -89,12 +90,12 @@ public class GeneralNoise
 		}
 		else if (noiseInfo.dimension == Dimension.D2)
 		{
-			noise1D = new float[(int)(noiseInfo.dimensions.x * noiseInfo.dimensions.y)];
+			noise1D = new float[(int)(noiseInfo.dimensions.x * noiseInfo.dimensions.z)];
 			for (int x = 0; x < noiseInfo.dimensions.x; x++)
 			{
-				for (int y = 0; y < noiseInfo.dimensions.y; y++)
+				for (int z = 0; z < noiseInfo.dimensions.z; z++)
 				{
-					noise1D[(int)(y * noiseInfo.dimensions.x + x)] = noise2D[x, y];
+					noise1D[(int)(z * noiseInfo.dimensions.x + x)] = noise2D[x, z];
 				}
 			}
 		}
@@ -103,13 +104,13 @@ public class GeneralNoise
 			noise1D = new float[(int)(noiseInfo.dimensions.x * noiseInfo.dimensions.y * noiseInfo.dimensions.z)];
 			for (int x = 0; x < noiseInfo.dimensions.x; x++)
 			{
-				for (int y = 0; y < noiseInfo.dimensions.y; y++)
+				for (int z = 0; z < noiseInfo.dimensions.z; z++)
 				{
-					for (int z = 0; y < noiseInfo.dimensions.z; z++)
+					for (int y = 0; y < noiseInfo.dimensions.y; y++)
 					{
-						noise1D[(int)(z * noiseInfo.dimensions.x * noiseInfo.dimensions.y +
-							y * noiseInfo.dimensions.x +
-							x)] = noise2D[x, y];
+						noise1D[(int)(y * noiseInfo.dimensions.x * noiseInfo.dimensions.z +
+							z * noiseInfo.dimensions.x +
+							x)] = noise2D[x, z];
 					}
 				}
 			}
@@ -136,7 +137,7 @@ public class GeneralNoise
 		{
 			for (int i = 0; i < noise1D.Length; i++)
 			{
-				noise3D[i % xDim % yDim, i % xDim / yDim, i / xDim / yDim] = noise1D[i];
+				noise3D[i % xDim % zDim, i % xDim / zDim, i / xDim / zDim] = noise1D[i];
 			}
 		}
 	}
@@ -160,9 +161,9 @@ public class GeneralNoise
 		{
 			for (int x = 0; x < noiseInfo.dimensions.x; x++)
 			{
-				for (int y = 0; y < noiseInfo.dimensions.y; y++)
+				for (int z = 0; z < noiseInfo.dimensions.z; z++)
 				{
-					noise2D[x, y] = noise1D[(int)(x * noiseInfo.dimensions.x + y)];
+					noise2D[x, z] = noise1D[(int)(x * noiseInfo.dimensions.x + z)];
 				}
 			}
 		}
@@ -170,13 +171,13 @@ public class GeneralNoise
 		{
 			for (int x = 0; x < noiseInfo.dimensions.x; x++)
 			{
-				for (int y = 0; y < noiseInfo.dimensions.y; y++)
+				for (int z = 0; z < noiseInfo.dimensions.z; z++)
 				{
-					for (int z = 0; y < noiseInfo.dimensions.z; z++)
+					for (int y = 0; y < noiseInfo.dimensions.y; y++)
 					{
-						noise2D[x, y] = noise1D[(int)(x * noiseInfo.dimensions.x * noiseInfo.dimensions.y +
-							y * noiseInfo.dimensions.y +
-							z)];
+						noise2D[x, z] = noise1D[(int)(x * noiseInfo.dimensions.x * noiseInfo.dimensions.z +
+							z * noiseInfo.dimensions.z +
+							y)];
 					}
 				}
 			}
@@ -233,9 +234,9 @@ public class GeneralNoise
 			weightedNoises[i].SetWeightedNoiseResult();
 			for (int x = 0; x < noiseInfo.dimensions.x; x++)
 			{
-				for (int y = 0; y < noiseInfo.dimensions.y; y++)
+				for (int z = 0; z < noiseInfo.dimensions.z; z++)
 				{
-					resultNoise2D[x, y] += noiseWeights[i] * weightedNoises[i].resultNoise2D[x, y];
+					resultNoise2D[x, z] += noiseWeights[i] * weightedNoises[i].resultNoise2D[x, z];
 				}
 			}
 		}
@@ -248,11 +249,11 @@ public class GeneralNoise
 			weightedNoises[i].SetWeightedNoiseResult();
 			for (int x = 0; x < noiseInfo.dimensions.x; x++)
 			{
-				for (int y = 0; y < noiseInfo.dimensions.y; y++)
+				for (int z = 0; z < noiseInfo.dimensions.z; z++)
 				{
-					for (int z = 0; z < noiseInfo.dimensions.z; z++)
+					for (int y = 0; y < noiseInfo.dimensions.y; y++)
 					{
-						resultNoise3D[x, y, z] += noiseWeights[i] * weightedNoises[i].resultNoise3D[x, y, z];
+						resultNoise3D[x, z, y] += noiseWeights[i] * weightedNoises[i].resultNoise3D[x, z, y];
 					}
 				}
 			}
@@ -264,18 +265,18 @@ public class GeneralNoise
 		float amplitude = noiseInfo.amplitude;
 		float frequency = 1 / noiseInfo.scale;
 		int x_ = (int)noiseInfo.dimensions.x;
-		int y_ = (int)noiseInfo.dimensions.y;
-		noise2D = new float[x_, y_];
+		int z_ = (int)noiseInfo.dimensions.z;
+		noise2D = new float[x_, z_];
 
 		for (int x = 0; x < x_; x++)
 		{
-			for (int y = 0; y < y_; y++)
+			for (int z = 0; z < z_; z++)
 			{
-				noise2D[x, y] = (float)(amplitude * (Math.Sin(x * frequency) + Math.Sin(y * frequency)) / 2f);
+				noise2D[x, z] = (float)(amplitude * (Math.Sin(x * frequency) + Math.Sin(z * frequency)) / 2f);
 				if (_DEBUG)
 				{
-					GD.Print($"generated value at {x}, {y}: {noise2D[x, y]}");
-					if (noise2D[x, y] > amplitude)
+					GD.Print($"generated value at {x}, {z}: {noise2D[x, z]}");
+					if (noise2D[x, z] > amplitude)
 					{
 						GD.Print("WARNING: wave noise amplitude exceeded on generation?");
 					}

@@ -53,17 +53,33 @@ enum Biome
 
 public struct BiomeInfo
 {
+	//squashing factor and heightOffset are the only hard "result" values
+	//temperature/humidity may influence shading/texturing?
+	//otherwise there should be an indirect correlation between each value based on a lookup table?
+	public static float ContinentalnessFactor = 100f;
 	//"5" noises
 	//2d unless caves
 	public float Continentalness; //howto determine what layer of noises is this applied? how far down the noise tree does this apply?
-	public float ContinentalnessThresholdBottom;
-	public float ContinentalnessThresholdTop;
+	//just influences height really say c*100 c can be a negative #
+	// public float ContinentalnessThresholdBottom;
+	// public float ContinentalnessThresholdTop;
 	public float squashingFactor;//erosion? mapped # ranges, ie 0-> -1 to .78, 6-> .55 to 1
 	public float heightOffset;
 	//last 2 should be soft coupled with prev 3
 	public float temperature;
 	public float humidity;
 	//TODO create thresholds for categorization using tables
+	public BiomeInfo(float Continentalness, 
+		float squashingFactor, float heightOffset, float temperature, float humidity)
+	{
+		this.Continentalness = Continentalness;
+		// this.ContinentalnessThresholdBottom = ContinentalnessThresholdBottom;
+		// this.ContinentalnessThresholdTop = ContinentalnessThresholdTop;
+		this.squashingFactor = squashingFactor;
+		this.heightOffset = heightOffset;
+		this.temperature = temperature;
+		this.humidity = humidity;
+	}
 }
 
 //for caves
@@ -102,6 +118,10 @@ public class BlockGenerator : Spatial
 		GeneralNoise terrainNoise2D = new GeneralNoise(terrainNoise2DInfo);
 		terrainNoise2D.SetWeightedNoiseResult();
 
+		BiomeInfo biomeInfo = new BiomeInfo(1f, .2f, .3f, 1f, 1f);
+		//BiomeInfo(Continentalness, 
+		//squashingFactor, heightOffset, temperature, humidity);
+
 		// Do something with this data...
 		SpatialMaterial basicBlockMaterial = new SpatialMaterial();
 		basicBlockMaterial.ResourcePath = "res://BaseBlockTexture.png";
@@ -111,7 +131,6 @@ public class BlockGenerator : Spatial
 		//keep in mind y is up
 		float dimY = dimensions.y;
 		float halfdimY = dimY / 2f;
-		float noiseValueReverseTwosComplement;//idk why i need this
 
 		for (int x = 0; x < dimensions.x; x++)
 		{
@@ -123,7 +142,7 @@ public class BlockGenerator : Spatial
 					{
 						GD.Print($"value for {x},{z} was {noiseData[x, z]}");
 					}
-					if (noiseData[x, z] * dimY >= (float)y - halfdimY)
+					if (noiseData[x, z] * dimY * biomeInfo.squashingFactor + biomeInfo.heightOffset*y >= (float)y - halfdimY )
 					{
 						CSGBox csgbox = new CSGBox();
 						// csgbox3d.Texture = texture;
