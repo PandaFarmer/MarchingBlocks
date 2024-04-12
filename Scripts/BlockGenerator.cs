@@ -9,20 +9,18 @@ using System.Diagnostics;
 
 public struct NoiseInfo
 {
-	public Dimension dimension;
+	public Dimension dimension;//1D, 2D, 3D..
 	public Vector3 dimensions;
 	public float amplitude;
-	public float scale;//
-	public Vector3 baseOffsets;
+	public float scale;//lower values for larger smoother features
 	public BasicNoiseType basicNoiseType;
 	public int seed;
-	public NoiseInfo(Dimension dimension, Vector3 dimensions, float amplitude, float scale, Vector3 baseOffsets, BasicNoiseType basicNoiseType, int seed)
+	public NoiseInfo(Dimension dimension, Vector3 dimensions, float amplitude, float scale, BasicNoiseType basicNoiseType, int seed)
 	{
 		this.dimension = dimension;
 		this.dimensions = dimensions;//flip y z for godot
 		this.amplitude = amplitude;
 		this.scale = scale;
-		this.baseOffsets = baseOffsets;
 		this.basicNoiseType = basicNoiseType;
 		this.seed = seed;
 	}
@@ -100,7 +98,7 @@ public class BlockGenerator : Spatial
 	{
 		// Vector3 dimensions = new Vector3(2f, 2f, 2f);
 		// Vector3 dimensions = new Vector3(5f, 5f, 5f);
-		Vector3 dimensions = new Vector3(30f, 10f, 30f);
+		Vector3 dimensions = new Vector3(30f, 30f, 30f);
 		FillWorld(dimensions);
 	}
 
@@ -112,15 +110,11 @@ public class BlockGenerator : Spatial
 
 		// Gather noise data
 
-		float amplitude = 1f;
-		float scale = 5f;
-		NoiseInfo terrainNoise2DInfo = new NoiseInfo(Dimension.D2, dimensions, amplitude, scale, Vector3.Zero, BasicNoiseType.Wave, 0);
+		float amplitude = 1f;//should root amplitude be dominant? make sure normalization happens leaf to root?
+		float scale = .1f;//inverse scale for larger smoother features
+		NoiseInfo terrainNoise2DInfo = new NoiseInfo(Dimension.D2, dimensions, amplitude, scale, BasicNoiseType.Wave, 0);
 		GeneralNoise terrainNoise2D = new GeneralNoise(terrainNoise2DInfo);
 		terrainNoise2D.SetWeightedNoiseResult();
-
-		BiomeInfo biomeInfo = new BiomeInfo(1f, .2f, .3f, 1f, 1f);
-		//BiomeInfo(Continentalness, 
-		//squashingFactor, heightOffset, temperature, humidity);
 
 		// Do something with this data...
 		SpatialMaterial basicBlockMaterial = new SpatialMaterial();
@@ -132,6 +126,13 @@ public class BlockGenerator : Spatial
 		float dimY = dimensions.y;
 		float halfdimY = dimY / 2f;
 
+		float continentalness = 1f;
+		float squashingFactor = .5f;//must b a value between 0 and 1 for proper results
+		float heightOffset = 0f;//value between 0 and dimY
+		BiomeInfo biomeInfo = new BiomeInfo(continentalness, squashingFactor, heightOffset, 1f, 1f);
+		//BiomeInfo(Continentalness, 
+		//squashingFactor, heightOffset, temperature, humidity);
+
 		for (int x = 0; x < dimensions.x; x++)
 		{
 			for (int y = 0; y < dimensions.y; y++)
@@ -142,7 +143,8 @@ public class BlockGenerator : Spatial
 					{
 						GD.Print($"value for {x},{z} was {noiseData[x, z]}");
 					}
-					if (noiseData[x, z] * dimY * biomeInfo.squashingFactor + biomeInfo.heightOffset*y >= (float)y - halfdimY )
+					if (noiseData[x, z] * dimY * biomeInfo.squashingFactor + biomeInfo.heightOffset >= (float)y )
+					// if(noiseData[x, z] <= .5f)
 					{
 						CSGBox csgbox = new CSGBox();
 						// csgbox3d.Texture = texture;
@@ -155,6 +157,49 @@ public class BlockGenerator : Spatial
 				}
 			}
 		}
+	}
+
+	public float[,,] CaveNoiseValues(NoiseInfo noiseInfoA, NoiseInfo noiseInfoB, bool isNoodlyTunnels)
+	{
+		int xDim = (int)noiseInfoA.dimensions.x;
+		int yDim = (int)noiseInfoA.dimensions.y;
+		int zDim = (int)noiseInfoA.dimensions.z;
+		if(noiseInfoA.dimensions != noiseInfoB.dimensions)
+		{
+			GD.Print("Warning, mismatched dimensions in CaveNoiseValue generation");
+			Debug.Assert(false);
+			return null;
+		}
+		GeneralNoise generalNoiseA = new GeneralNoise(noiseInfoA);
+		GeneralNoise generalNoiseB = new GeneralNoise(noiseInfoB);
+		float[,,] caveNoiseValues = new float[xDim, yDim, zDim];
+		if(isNoodlyTunnels)
+		{
+			for(int x = 0; x < xDim; x++)
+			{
+				for(int y = 0; y < yDim; y++)
+				{
+					for(int z = 0; z < zDim; z++)
+					{
+						caveNoiseValues[x, y, z] = Math.Abs(generalNoiseA.noise3D[x, y, z]) + Math.Abs(generalNoiseB.noise3D[x, y, z]);
+					}
+				}
+			}
+			return caveNoiseValues;
+		}
+
+		for(int x = 0; x < xDim; x++)
+			{
+				for(int y = 0; y < yDim; y++)
+				{
+					for(int z = 0; z < zDim; z++)
+					{
+						caveNoiseValues[x, y, z] = (float)Math.Pow(generalNoiseB.noise3D[x, y, z], 2) + 
+							(float)Math.Pow(generalNoiseB.noise3D[x, y, z], 2);
+					}
+				}
+			}
+			return caveNoiseValues;
 	}
 
 	public float[,,] ScalarFieldFromGeneralNoise(Vector3 generationDimensions, GeneralNoise generalNoise)

@@ -1,9 +1,10 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+
 using System.Reflection;
 using SimplexNoise;
-using System.Linq;
 using System.Diagnostics;
 
 public class GeneralNoise
@@ -20,7 +21,6 @@ public class GeneralNoise
 	public float[,] resultNoise2D;
 	public float[,,] resultNoise3D;
 	bool computed = false;
-	//TODO decide where to include squashing factor+height offset
 
 	public GeneralNoise(NoiseInfo noiseInfo)
 	{
@@ -42,10 +42,10 @@ public class GeneralNoise
 		}
 		else if (noiseInfo.dimension == Dimension.D2)
 		{
-			// if(noiseInfo.basicNoiseType == BasicNoiseType.Wave)
-			// {
-			// 	SetWaveNoise2D();
-			// }
+			if(noiseInfo.basicNoiseType == BasicNoiseType.Wave)
+			{
+				SetWaveNoise2D();
+			}
 			noise2D = Noise.Calc2D((int)noiseInfo.dimensions.x, (int)noiseInfo.dimensions.z, noiseInfo.scale);
 		}
 		else if (noiseInfo.dimension == Dimension.D3)
@@ -60,7 +60,7 @@ public class GeneralNoise
 		{
 			noise1D[i] = (noise1D[i] - 128f) / 256;
 		}
-
+		NormalizeData(noise1D, 0, 1);
 		UnflattenData();
 
 		TestNoise();
@@ -69,8 +69,10 @@ public class GeneralNoise
 	private void TestNoise()
 	{
 		bool testCaseNormalization = true;
+		float sum = 0;
 		foreach (float noiseValue in noise1D)
 		{
+			sum+= noiseValue;
 			if (noiseValue > noiseInfo.amplitude || noiseValue < -noiseInfo.amplitude)
 			{
 				testCaseNormalization = false;
@@ -79,6 +81,7 @@ public class GeneralNoise
 		}
 		GD.Print($"Values Normalized: {testCaseNormalization}");
 		GD.Print($"Values ranged from {noise1D.Min()} to {noise1D.Max()}");
+		GD.Print($"Mean value: {sum/noise1D.Length}");
 		Debug.Assert(testCaseNormalization);
 	}
 
@@ -142,12 +145,13 @@ public class GeneralNoise
 		}
 	}
 
-	private void NormalizeData(IEnumerable<double> data, int min, int max)
+	private void NormalizeData(float[] data, int min, int max)
 	{
 		double dataMax = data.Max();
 		double dataMin = data.Min();
 		double range = dataMax - dataMin;
 		//https://stackoverflow.com/questions/5383937/array-data-normalization
+
 		noise1D = noise1D.Select(d => (d - dataMin) / range)
 		.Select(n => (float)((1 - n) * min + n * max))
 		.ToArray();
